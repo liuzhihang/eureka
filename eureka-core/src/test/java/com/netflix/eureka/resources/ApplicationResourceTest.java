@@ -82,6 +82,10 @@ public class ApplicationResourceTest extends AbstractTester {
         }
     }
 
+    /**
+     * 测试注册
+     * @throws Exception
+     */
     @Test
     public void testGoodRegistration() throws Exception {
         InstanceInfo noIdInfo = InstanceInfoGenerator.takeOne();

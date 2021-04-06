@@ -63,6 +63,19 @@ import javax.inject.Singleton;
 import static com.netflix.eureka.Names.METRIC_REGISTRY_PREFIX;
 
 /**
+ *
+ * 处理所有操作到AbstractInstanceRegistry复制，以复制到对等Eureka节点，以使它们保持同步。
+ *
+ * 复制的主要操作是注册、心跳、取消、过期和状态更改
+ *
+ * 当 eureka 服务器启动时，会从其他 eureka 节点获取所有注册表信息。
+ * 如果由于某种原因该操作失败，则服务器不允许用户在 EurekaServerConfig.getWaitTimeInMsWhenSyncEmpty() 指定的时间段内获取注册表信息。
+ *
+ * 如果在 EurekaServerConfig.getRenewalPercentThreshold() 指定时间内 Eureka 获取到的心跳比例低于指定的比例
+ * EurekaServerConfig.getRenewalThresholdUpdateIntervalMs()  Eureka 则会认为自己出现故障,不会摘掉任何服务实例.
+ *
+ *
+ *
  * Handles replication of all operations to {@link AbstractInstanceRegistry} to peer
  * <em>Eureka</em> nodes to keep them all in sync.
  *
@@ -408,7 +421,9 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
         if (info.getLeaseInfo() != null && info.getLeaseInfo().getDurationInSecs() > 0) {
             leaseDuration = info.getLeaseInfo().getDurationInSecs();
         }
+        // 注册
         super.register(info, leaseDuration, isReplication);
+        // 同步到其他实例
         replicateToPeers(Action.Register, info.getAppName(), info.getId(), info, null, isReplication);
     }
 

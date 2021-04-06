@@ -1,14 +1,5 @@
 package com.netflix.eureka.resources;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Pattern;
-
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.appinfo.InstanceInfo.InstanceStatus;
 import com.netflix.discovery.shared.resolver.DefaultEndpoint;
@@ -30,10 +21,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,6 +39,10 @@ import static org.mockito.Mockito.when;
  * Test REST layer of client/server communication. This test instantiates fully configured Jersey container,
  * which is essential to verifying content encoding/decoding with different format types (JSON vs XML, compressed vs
  * uncompressed).
+ * <p>
+ * 测试客户端/服务器通信的REST层。 此测试将实例化完全配置的Jersey容器，这对于验证不同格式类型（JSON与XML，压缩与未压缩）的内容编码/解码至关重要
+ * <p>
+ * 启动 Eureka, 模拟客户端发送各种请求到注册中心
  *
  * @author Tomasz Bak
  */
@@ -231,19 +232,37 @@ public class EurekaClientServerRestIntegrationTest {
 
     }
 
+    /**
+     * 启动服务前置, 注释掉之前的逻辑, 用以下内容替换
+     *
+     * @throws Exception
+     */
     private static void startServer() throws Exception {
-        File warFile = findWar();
+
+        //     File warFile = findWar();
+        //
+        //     server = new Server(8080);
+        //
+        //     WebAppContext webapp = new WebAppContext();
+        //     webapp.setContextPath("/");
+        //     webapp.setWar(warFile.getAbsolutePath());
+        //     server.setHandler(webapp);
+        //
+        //     server.start();
+        //
+        //     eurekaServiceUrl = "http://localhost:8080/v2";
 
         server = new Server(8080);
 
-        WebAppContext webapp = new WebAppContext();
-        webapp.setContextPath("/");
-        webapp.setWar(warFile.getAbsolutePath());
-        server.setHandler(webapp);
-
+        WebAppContext webAppCtx = new WebAppContext(new File("./eureka-server/src/main/webapp").getAbsolutePath(), "/");
+        webAppCtx.setDescriptor(new File("./eureka-server/src/main/webapp/WEB-INF/web.xml").getAbsolutePath());
+        webAppCtx.setResourceBase(new File("./eureka-server/src/main/resources").getAbsolutePath());
+        webAppCtx.setClassLoader(Thread.currentThread().getContextClassLoader());
+        server.setHandler(webAppCtx);
         server.start();
 
         eurekaServiceUrl = "http://localhost:8080/v2";
+
     }
 
     private static File findWar() {

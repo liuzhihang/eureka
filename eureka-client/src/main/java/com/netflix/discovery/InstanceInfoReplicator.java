@@ -91,13 +91,13 @@ class InstanceInfoReplicator implements Runnable {
                     @Override
                     public void run() {
                         logger.debug("Executing on-demand update of local InstanceInfo");
-    
+
                         Future latestPeriodic = scheduledPeriodicRef.get();
                         if (latestPeriodic != null && !latestPeriodic.isDone()) {
                             logger.debug("Canceling the latest scheduled update, it will be rescheduled at the end of on demand update");
                             latestPeriodic.cancel(false);
                         }
-    
+
                         InstanceInfoReplicator.this.run();
                     }
                 });
@@ -112,12 +112,19 @@ class InstanceInfoReplicator implements Runnable {
         }
     }
 
+    /**
+     * 处理服务注册
+     */
+    @Override
     public void run() {
         try {
+            // 刷新当前的本地instanceInfo
             discoveryClient.refreshInstanceInfo();
 
+            // 一定是非空的 @see com.netflix.discovery.InstanceInfoReplicator.start
             Long dirtyTimestamp = instanceInfo.isDirtyWithTime();
             if (dirtyTimestamp != null) {
+                // 通过 REST 调用，向 eureka 服务注册
                 discoveryClient.register();
                 instanceInfo.unsetIsDirty(dirtyTimestamp);
             }
